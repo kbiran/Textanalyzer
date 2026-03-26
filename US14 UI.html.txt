@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Document Summarizer - Upload</title>
+
+    <style>
+        /* Basic page styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+
+            /* Smooth transition when background color changes */
+            transition: background-color 0.6s ease;
+
+            /* Initial background color */
+            background-color: #f5f7fa;
+        }
+
+        /* Main centered container */
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+
+            /* Subtle shadow for card effect */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+
+            text-align: center;
+        }
+
+        /* Title styling */
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        /* Description text */
+        p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        /* Upload box styling */
+        .upload-box {
+            border: 2px dashed #4a90e2;
+            padding: 30px;
+            border-radius: 10px;
+            background: #f0f6ff;
+
+            /* Cursor changes to pointer on hover */
+            cursor: pointer;
+
+            /* Smooth hover transition */
+            transition: 0.3s;
+        }
+
+        /* Hover effect for upload box */
+        .upload-box:hover {
+            background: #e4efff;
+        }
+
+        /* Hide the default file input */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Status message area */
+        #status {
+            margin-top: 25px;
+            font-size: 16px;
+            color: #444;
+
+            /* Hidden by default */
+            display: none;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            margin: 15px auto;
+            width: 40px;
+            height: 40px;
+
+            /* Spinner styling */
+            border: 4px solid #ddd;
+            border-top: 4px solid #4a90e2;
+            border-radius: 50%;
+
+            /* Infinite rotation animation */
+            animation: spin 1s linear infinite;
+
+            display: none;
+        }
+
+        /* Keyframes for spinning animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Main UI container -->
+<div class="container">
+    <h1>Smart Document Summarizer</h1>
+    <p>Upload PDF, DOCX, or TXT files to begin processing.</p>
+
+    <!-- Clickable upload area linked to hidden file input -->
+    <label class="upload-box" for="fileInput">
+        <strong>Click to Upload</strong><br>
+        or drag & drop your file here
+    </label>
+
+    <!-- Hidden file input (triggered by clicking the label) -->
+    <input type="file" id="fileInput" accept=".pdf,.docx,.txt">
+
+    <!-- Status display area (hidden initially) -->
+    <div id="status">
+        <div class="spinner"></div>
+        <span id="statusText">Processing your file...</span>
+    </div>
+</div>
+
+<script>
+    // Get references to HTML elements
+    const fileInput = document.getElementById("fileInput");
+    const statusBox = document.getElementById("status");
+    const spinner = document.querySelector(".spinner");
+    const statusText = document.getElementById("statusText");
+
+    // Function to change background color dynamically
+    function setBackground(color) {
+        document.body.style.backgroundColor = color;
+    }
+
+    // Set initial background color on page load
+    setBackground("#f5f7fa");
+
+    // Event listener for when a file is selected
+    fileInput.addEventListener("change", () => {
+
+        // Check if a file was selected
+        if (fileInput.files.length > 0) {
+
+            // Get the first selected file
+            const file = fileInput.files[0];
+
+            // Change background to indicate processing
+            setBackground("#fff4d6");
+
+            // Show status box and spinner
+            statusBox.style.display = "block";
+            spinner.style.display = "block";
+
+            // Display file name in status text
+            statusText.textContent = `Processing "${file.name}"...`;
+
+            // Simulate processing delay (2 seconds)
+            setTimeout(() => {
+
+                // Hide spinner after "processing"
+                spinner.style.display = "none";
+
+                // Update status message
+                statusText.textContent = "File uploaded successfully! Ready for extraction.";
+
+                // Change background to green (success state)
+                setBackground("#e6ffe6");
+
+            }, 2000);
+        }
+    });
+</script>
+
+</body>
+</html>

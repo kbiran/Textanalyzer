@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Text Summarizer UI — Extractive / Abstractive</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.08);
+      --text: #e9eefc;
+      --muted: rgba(233,238,252,0.72);
+      --line: rgba(233,238,252,0.16);
+      --accent: #6aa8ff;
+      --accent2: #7cdd9b;
+      --danger: #ff6a6a;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root{
+        --bg: #f6f8ff;
+        --panel: rgba(0,0,0,0.04);
+        --panel2: rgba(0,0,0,0.06);
+        --text: #0b1220;
+        --muted: rgba(11,18,32,0.70);
+        --line: rgba(11,18,32,0.14);
+        --accent: #2b6cff;
+        --accent2: #1f9d55;
+        --danger: #d93025;
+        --shadow: 0 10px 25px rgba(0,0,0,0.12);
+      }
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin: 0;
+      background: radial-gradient(1200px 700px at 10% 10%, rgba(106,168,255,0.18), transparent 60%),
+                  radial-gradient(900px 600px at 90% 20%, rgba(124,221,155,0.16), transparent 65%),
+                  var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.4;
+    }
+
+    .wrap{
+      max-width: 1200px;
+      margin: 28px auto;
+      padding: 0 16px 40px;
+    }
+
+    header{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .title h1{
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0.2px;
+    }
+    .title p{
+      margin: 6px 0 0;
+      color: var(--muted);
+      max-width: 72ch;
+      font-size: 14px;
+    }
+
+    .pill{
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      font-size: 12px;
+      color: var(--muted);
+      user-select: none;
+      white-space: nowrap;
+    }
+    .dot{
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent2);
+      box-shadow: 0 0 0 4px rgba(124,221,155,0.18);
+    }
+    .dot.offline{
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(255,106,106,0.18);
+    }
+
+    .controls{
+      display: grid;
+      grid-template-columns: 1.6fr 1.4fr 1.2fr 1fr auto;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    .field{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+    .field label{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    select, input[type="text"]{
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.12);
+      color: var(--text);
+      padding: 10px 10px;
+      border-radius: 10px;
+      outline: none;
+      font-size: 14px;
+    }
+    @media (prefers-color-scheme: light) {
+      select, input[type="text"]{
+        background: rgba(255,255,255,0.8);
+      }
+    }
+
+    .modes{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 4px;
+    }
+    .chip{
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.10);
+      padding: 9px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 13px;
+    }
+    @media (prefers-color-scheme: light){
+      .chip{ background: rgba(255,255,255,0.7); }
+    }
+    .chip input{ accent-color: var(--accent); }
+
+    .btns{
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+    button{
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.12);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: transform 0.06s ease, background 0.2s ease;
+    }
+    @media (prefers-color-scheme: light){
+      button{ background: rgba(255,255,255,0.9); }
+    }
+    button:hover{ transform: translateY(-1px); }
+    button.primary{
+      border-color: rgba(106,168,255,0.55);
+      background: linear-gradient(135deg, rgba(106,168,255,0.26), rgba(106,168,255,0.08));
+    }
+    button.ghost{ background: transparent; }
+    button:disabled{
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .grid{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 960px){
+      .controls{
+        grid-template-columns: 1fr 1fr;
+      }
+      .btns{
+        justify-content: stretch;
+      }
+      .grid{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel{
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 520px;
+    }
+    .panelHeader{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel2);
+    }
+    .panelHeader h2{
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .meta{
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .badge{
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.10);
+    }
+    @media (prefers-color-scheme: light){
+      .badge{ background: rgba(255,255,255,0.7); }
+    }
+
+    textarea{
+      width: 100%;
+      height: 100%;
+      resize: none;
+      border: none;
+      outline: none;
+      padding: 12px;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .panelBody{
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .summaryBox{
+      padding: 12px;
+      overflow: auto;
+      flex: 1;
+      min-height: 0;
+      white-space: pre-wrap;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .panelFooter{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      background: var(--panel2);
+    }
+
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .actions{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .actions button{
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .history{
+      border-top: 1px solid var(--line);
+      background: rgba(0,0,0,0.06);
+      max-height: 190px;
+      overflow: auto;
+    }
+    @media (prefers-color-scheme: light){
+      .history{ background: rgba(255,255,255,0.4); }
+    }
+    .historyItem{
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      align-items: center;
+    }
+    .historyItem:hover{
+      background: rgba(106,168,255,0.08);
+    }
+    .historyItem.active{
+      background: rgba(106,168,255,0.14);
+    }
+    .historyTitle{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 13px;
+    }
+    .historyTitle strong{ font-weight: 800; }
+    .historySnippet{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 58ch;
+    }
+    .historyRight{
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .statusRow{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .spinner{
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(233,238,252,0.25);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    .error{
+      color: var(--danger);
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    mark.hl{
+      background: rgba(124,221,155,0.25);
+      color: inherit;
+      padding: 0 2px;
+      border-radius: 3px;
+    }
+
+    .srOnly{
+      position:absolute;
+      left:-9999px;
+      width:1px;
+      height:1px;
+      overflow:hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Summarizer UI (Extractive / Abstractive)</h1>
+        <p>
+          Paste your original text on the left. Summaries appear in a dedicated panel on the right, with a history list so you can compare multiple runs (mode + length: short/medium/long).
+        </p>
+      </div>
+      <div class="pill" id="apiPill" title="Backend API status">
+        <span class="dot" id="apiDot"></span>
+        <span id="apiLabel">API: checking…</span>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Summarization controls">
+      <div class="field">
+        <label for="apiUrl">Backend URL (POST endpoint)</label>
+        <input id="apiUrl" type="text" value="/api/summarize" />
+      </div>
+
+      <div class="field">
+        <label>Mode</label>
+        <div class="modes" role="radiogroup" aria-label="Summary mode">
+          <label class="chip">
+            <input type="radio" name="mode" value="extractive" checked />
+            Extractive
+          </label>
+          <label class="chip">
+            <input type="radio" name="mode" value="abstractive" />
+            Abstractive
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="length">Length</label>
+        <select id="length">
+          <option value="short">Short</option>
+          <option value="medium" selected>Medium</option>
+          <option value="long">Long</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="highlightToggle">Extractive highlight</label>
+        <select id="highlightToggle">
+          <option value="on" selected>Highlight summary sentences in original</option>
+          <option value="off">Off</option>
+        </select>
+      </div>
+
+      <div class="btns">
+        <button class="ghost" id="clearBtn" type="button">Clear</button>
+        <button class="primary" id="summarizeBtn" type="button">Generate Summary</button>
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- Left: Original -->
+      <section class="panel" aria-label="Original text panel">
+        <div class="panelHeader">
+          <h2>Original Text</h2>
+          <div class="meta">
+            <span class="badge" id="charCount">0 chars</span>
+            <span class="badge" id="wordCount">0 words</span>
+          </div>
+        </div>
+        <div class="panelBody">
+          <textarea id="inputText" placeholder="Paste or type your text here..."></textarea>
+        </div>
+        <div class="panelFooter">
+          <div class="small" id="originalHint">Tip: Try extractive + short/medium/long to see 2/4/6 sentence behavior.</div>
+          <div class="actions">
+            <button type="button" id="pasteSampleBtn">Paste sample</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Summary -->
+      <section class="panel" aria-label="Summary panel">
+        <div class="panelHeader">
+          <h2>Summary (Dedicated Panel)</h2>
+          <div class="meta">
+            <span class="badge" id="modeBadge">mode: —</span>
+            <span class="badge" id="lengthBadge">length: —</span>
+            <span class="badge" id="timeBadge">— ms</span>
+          </div>
+        </div>
+
+        <div class="panelBody">
+          <div class="summaryBox" id="summaryBox" aria-live="polite">
+            <span class="small">Your generated summary will appear here.</span>
+          </div>
+
+          <div class="history" id="history" aria-label="Summary history list"></div>
+        </div>
+
+        <div class="panelFooter">
+          <div class="statusRow">
+            <div class="spinner" id="spinner" aria-hidden="true"></div>
+            <div class="small" id="statusText">Ready.</div>
+            <span class="srOnly" id="srStatus" aria-live="assertive"></span>
+          </div>
+          <div class="actions">
+            <button type="button" id="copyBtn" disabled>Copy</button>
+            <button type="button" id="downloadBtn" disabled>Download .txt</button>
+          </div>
+        </div>
+
+        <div class="error" id="errorBox"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ---------------------------
+    // Config / Elements
+    // ---------------------------
+    const els = {
+      apiUrl: document.getElementById('apiUrl'),
+      apiDot: document.getElementById('apiDot'),
+      apiLabel: document.getElementById('apiLabel'),
+      apiPill: document.getElementById('apiPill'),
+
+      inputText: document.getElementById('inputText'),
+      charCount: document.getElementById('charCount'),
+      wordCount: document.getElementById('wordCount'),
+
+      summarizeBtn: document.getElementById('summarizeBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      pasteSampleBtn: document.getElementById('pasteSampleBtn'),
+
+      length: document.getElementById('length'),
+      highlightToggle: document.getElementById('highlightToggle'),
+
+      summaryBox: document.getElementById('summaryBox'),
+      history: document.getElementById('history'),
+
+      modeBadge: document.getElementById('modeBadge'),
+      lengthBadge: document.getElementById('lengthBadge'),
+      timeBadge: document.getElementById('timeBadge'),
+
+      spinner: document.getElementById('spinner'),
+      statusText: document.getElementById('statusText'),
+      srStatus: document.getElementById('srStatus'),
+      errorBox: document.getElementById('errorBox'),
+
+      copyBtn: document.getElementById('copyBtn'),
+      downloadBtn: document.getElementById('downloadBtn'),
+    };
+
+    let historyItems = []; // { id, mode, length, ms, summary, createdAt, snippet }
+    let activeId = null;
+
+    // ---------------------------
+    // Helpers
+    // ---------------------------
+    function getMode(){
+      return document.querySelector('input[name="mode"]:checked')?.value || 'extractive';
+    }
+
+    function setLoading(on){
+      els.spinner.style.display = on ? 'inline-block' : 'none';
+      els.summarizeBtn.disabled = on;
+      els.clearBtn.disabled = on;
+      els.pasteSampleBtn.disabled = on;
+      els.apiUrl.disabled = on;
+      els.length.disabled = on;
+      document.querySelectorAll('input[name="mode"]').forEach(r => r.disabled = on);
+    }
+
+    function setError(msg){
+      if(!msg){
+        els.errorBox.style.display = 'none';
+        els.errorBox.textContent = '';
+        return;
+      }
+      els.errorBox.style.display = 'block';
+      els.errorBox.textContent = msg;
+      els.srStatus.textContent = msg;
+    }
+
+    function updateCounts(){
+      const text = els.inputText.value || '';
+      els.charCount.textContent = `${text.length.toLocaleString()} chars`;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      els.wordCount.textContent = `${words.toLocaleString()} words`;
+    }
+
+    function escapeHtml(str){
+      return str.replace(/[&<>"']/g, s => ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'
+      }[s]));
+    }
+
+    // Highlight extractive sentences in original textarea by rendering a "preview" in the summaryBox only,
+    // since native textarea can't partially style text.
+    // We'll do a lightweight sentence match: wrap matched sentences with <mark>.
+    function renderOriginalWithHighlights(original, summary){
+      // Only attempt highlight if user enabled it and mode extractive (where sentences likely match verbatim-ish)
+      if(els.highlightToggle.value !== 'on') return null;
+
+      const summarySentences = summary
+        .split(/(?<=[.!?])\s+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if(summarySentences.length === 0) return null;
+
+      // Build a safe HTML representation with marked sentences.
+      // For each summary sentence, replace exact matches in the original.
+      let html = escapeHtml(original);
+
+      // Replace longest first to reduce nested replacements.
+      summarySentences.sort((a,b)=> b.length - a.length).forEach(s => {
+        const safe = escapeHtml(s);
+        // Escape for regex
+        const pattern = safe.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(pattern, 'g');
+        html = html.replace(re, `<mark class="hl">${safe}</mark>`);
+      });
+
+      return html;
+    }
+
+    function setActiveSummary(item){
+      activeId = item.id;
+      els.modeBadge.textContent = `mode: ${item.mode}`;
+      els.lengthBadge.textContent = `length: ${item.length}`;
+      els.timeBadge.textContent = `${item.ms} ms`;
+
+      // Display summary text
+      els.summaryBox.innerHTML = `<div>${escapeHtml(item.summary)}</div>`;
+
+      // Enable actions
+      els.copyBtn.disabled = false;
+      els.downloadBtn.disabled = false;
+
+      // Update active highlight in history list
+      renderHistory();
+
+      // If extractive highlight enabled, show a hint below summary by injecting a collapsible preview of highlighted original
+      // (keeps dedicated summary panel as the main display; preview is optional for comparison).
+      const original = els.inputText.value || '';
+      if(item.mode === 'extractive'){
+        const highlighted = renderOriginalWithHighlights(original, item.summary);
+        if(highlighted){
+          const details = document.createElement('details');
+          details.style.marginTop = '10px';
+          details.innerHTML = `
+            <summary class="small" style="cursor:pointer;">Show original text with extractive highlights</summary>
+            <div style="margin-top:8px; padding:10px; border:1px solid var(--line); border-radius:12px; background:rgba(0,0,0,0.06); max-height:220px; overflow:auto;">
+              <div style="white-space:pre-wrap; line-height:1.55;">${highlighted}</div>
+            </div>
+          `;
+          els.summaryBox.appendChild(details);
+        }
+      }
+    }
+
+    function renderHistory(){
+      els.history.innerHTML = '';
+      if(historyItems.length === 0){
+        els.history.innerHTML = `<div class="small" style="padding: 10px 12px;">No summaries yet. Generate one to build a comparison history.</div>`;
+        return;
+      }
+
+      historyItems.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'historyItem' + (item.id === activeId ? ' active' : '');
+        row.tabIndex = 0;
+        row.setAttribute('role', 'button');
+        row.setAttribute('aria-label', `Summary history item ${item.mode} ${item.length}`);
+
+        row.innerHTML = `
+          <div>
+            <div class="historyTitle">
+              <strong>${item.mode}</strong>
+              <span class="badge">len: ${item.length}</span>
+              <span class="badge">${item.ms} ms</span>
+              <span class="badge">${item.createdAt}</span>
+            </div>
+            <div class="historySnippet">${escapeHtml(item.snippet)}</div>
+          </div>
+          <div class="historyRight">Click to view</div>
+        `;
+
+        row.addEventListener('click', () => setActiveSummary(item));
+        row.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveSummary(item); }
+        });
+
+        els.history.appendChild(row);
+      });
+    }
+
+    function downloadText(filename, text){
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // ---------------------------
+    // API calls
+    // ---------------------------
+    async function checkApi(){
+      // Lightweight check: HEAD/GET to endpoint may not be supported.
+      // We'll do a GET with ?ping=1; if it fails, we mark offline but UI still works.
+      const url = els.apiUrl.value.trim();
+      if(!url) return;
+
+      try{
+        const res = await fetch(url + (url.includes('?') ? '&' : '?') + 'ping=1', { method: 'GET' });
+        // Any response is considered "reachable"
+        els.apiDot.classList.remove('offline');
+        els.apiLabel.textContent = 'API: reachable';
+        els.apiPill.title = 'Backend endpoint responded to ping.';
+      }catch{
+        els.apiDot.classList.add('offline');
+        els.apiLabel.textContent = 'API: not reachable (UI still OK)';
+        els.apiPill.title = 'Could not reach backend endpoint. Summarization requests will fail until backend is running.';
+      }
+    }
+
+    async function generateSummary(){
+      const text = (els.inputText.value || '').trim();
+      if(!text){
+        setError('Please paste or type some text to summarize.');
+        return;
+      }
+
+      setError(null);
+      setLoading(true);
+      els.statusText.textContent = 'Generating summary…';
+      els.srStatus.textContent = 'Generating summary';
+
+      const mode = getMode();
+      const length = els.length.value;
+      const url = els.apiUrl.value.trim();
+
+      const t0 = performance.now();
+      try{
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, mode, length })
+        });
+
+        if(!res.ok){
+          const errText = await res.text().catch(()=> '');
+          throw new Error(`HTTP ${res.status} ${res.statusText}${errText ? ' — ' + errText : ''}`);
+        }
+
+        const data = await res.json();
+        // Expect: { summary: "..." } (or { result: "..."}). We'll accept either.
+        const summary = (data.summary ?? data.result ?? '').toString();
+
+        const ms = Math.round(performance.now() - t0);
+        if(!summary){
+          throw new Error('Backend returned an empty summary. Ensure your API returns JSON like { "summary": "..." }.');
+        }
+
+        const item = {
+          id: crypto.randomUUID(),
+          mode,
+          length,
+          ms,
+          summary,
+          createdAt: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+          snippet: summary.length > 140 ? summary.slice(0, 140) + '…' : summary
+        };
+
+        historyItems = [item, ...historyItems].slice(0, 25); // keep last 25
+        renderHistory();
+        setActiveSummary(item);
+
+        els.statusText.textContent = 'Done.';
+        els.srStatus.textContent = 'Summary generated';
+      }catch(err){
+        setError(`Could not generate summary: ${err.message}`);
+        els.statusText.textContent = 'Error.';
+      }finally{
+        setLoading(false);
+      }
+    }
+
+    // ---------------------------
+    // UI actions
+    // ---------------------------
+    els.inputText.addEventListener('input', updateCounts);
+    els.apiUrl.addEventListener('change', checkApi);
+
+    els.summarizeBtn.addEventListener('click', generateSummary);
+
+    els.clearBtn.addEventListener('click', () => {
+      els.inputText.value = '';
+      updateCounts();
+      els.summaryBox.innerHTML = `<span class="small">Your generated summary will appear here.</span>`;
+      els.modeBadge.textContent = 'mode: —';
+      els.lengthBadge.textContent = 'length: —';
+      els.timeBadge.textContent = '— ms';
+      historyItems = [];
+      activeId = null;
+      renderHistory();
+      els.copyBtn.disabled = true;
+      els.downloadBtn.disabled = true;
+      setError(null);
+      els.statusText.textContent = 'Cleared.';
+    });
+
+    els.pasteSampleBtn.addEventListener('click', () => {
+      els.inputText.value =
+`Natural language processing (NLP) is a field of artificial intelligence focused on enabling computers to understand and generate human language. Modern NLP systems combine statistical methods with deep learning models to perform tasks such as summarization, translation, and question answering. Extractive summarization selects key sentences from a document, while abstractive summarization generates new sentences that paraphrase the original content. Controlling summary length helps users quickly choose between brief overviews and more detailed digests. In practice, applications often provide multiple modes and lengths to support different reading goals, from skimming to deep review.`;
+      updateCounts();
+      setError(null);
+      els.statusText.textContent = 'Sample text pasted.';
+    });
+
+    els.copyBtn.addEventListener('click', async () => {
+      const item = historyItems.find(h => h.id === activeId);
+      if(!item) return;
+      try{
+        await navigator.clipboard.writeText(item.summary);
+        els.statusText.textContent = 'Copied summary to clipboard.';
+        els.srStatus.textContent = 'Copied';
+      }catch{
+        setError('Copy failed (clipboard permissions). You can select text and copy manually.');
+      }
+    });
+
+    els.downloadBtn.addEventListener('click', () => {
+      const item = historyItems.find(h => h.id === activeId);
+      if(!item) return;
+      const name = `summary_${item.mode}_${item.length}.txt`;
+      downloadText(name, item.summary);
+      els.statusText.textContent = `Downloaded ${name}.`;
+    });
+
+    // Init
+    updateCounts();
+    renderHistory();
+    checkApi();
+  </script>
+</body>
+</html>

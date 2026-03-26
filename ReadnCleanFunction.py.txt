@@ -1,0 +1,160 @@
+import os
+import re
+import pdfplumber
+import docx
+
+# Optional libraries for OCR
+from pdf2image import convert_from_path
+import pytesseract
+
+# Maximum allowed file size (in MB)
+MAX_FILE_SIZE_MB = 20
+
+
+def extract_pdf(file_path):
+    """
+    Extract text from a PDF.
+    First attempts normal text extraction.
+    If no text is found, falls back to OCR.
+    """
+
+    text_parts = []
+
+    try:
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text()
+
+                if page_text:
+                    text_parts.append(page_text)
+
+    except Exception as e:
+        raise RuntimeError(f"Error reading PDF file: {e}")
+
+    # If text extraction failed, try OCR
+    if not text_parts:
+        try:
+            images = convert_from_path(file_path)
+
+            for img in images:
+                ocr_text = pytesseract.image_to_string(img)
+                text_parts.append(ocr_text)
+
+        except Exception as e:
+            raise RuntimeError(f"OCR failed while reading PDF: {e}")
+
+    return "\n".join(text_parts)
+
+
+def extract_docx(file_path):
+    """Extract text from a DOCX file."""
+
+    try:
+        doc = docx.Document(file_path)
+
+        paragraphs = []
+
+        for para in doc.paragraphs:
+            if para.text.strip():
+                paragraphs.append(para.text)
+
+        return "\n".join(paragraphs)
+
+    except Exception as e:
+        raise RuntimeError(f"Error reading DOCX file: {e}")
+
+
+def extract_txt(file_path):
+    """Extract text from a TXT file."""
+
+    try:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            return f.read()
+
+    except Exception as e:
+        raise RuntimeError(f"Error reading TXT file: {e}")
+
+
+def clean_text(text):
+    """
+    Clean and normalize extracted text while preserving paragraphs.
+    """
+
+    if not text:
+        return ""
+
+    # Fix hyphenated words split across lines
+    text = re.sub(r"-\n", "", text)
+
+    # Remove page numbers like: "Page 1", "1"
+    text = re.sub(r"\n\s*Page\s*\d+\s*\n", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"\n\s*\d+\s*\n", "\n", text)
+
+    # Remove extra spaces
+    text = re.sub(r"[ \t]+", " ", text)
+
+    # Normalize multiple line breaks
+    text = re.sub(r"\n{3,}", "\n\n", text)
+
+    return text.strip()
+
+
+def validate_file(file_path):
+    """
+    Validate that the file exists and is not too large.
+    """
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError("The file path does not exist.")
+
+    # Check file size
+    size_mb = os.path.getsize(file_path) / (1024 * 1024)
+
+    if size_mb > MAX_FILE_SIZE_MB:
+        raise ValueError(
+            f"File is too large ({size_mb:.2f} MB). Maximum allowed size is {MAX_FILE_SIZE_MB} MB."
+        )
+
+
+def load_and_clean_document(file_path=None, pasted_text=None):
+    """
+    Load text from a file or pasted text and return cleaned content.
+    """
+
+    raw_text = ""
+
+    # Handle pasted text
+    if pasted_text:
+        raw_text = pasted_text
+
+    # Handle file input
+    elif file_path:
+
+        # Validate file
+        validate_file(file_path)
+
+        ext = os.path.splitext(file_path)[1].lower()
+
+        if ext == ".pdf":
+            raw_text = extract_pdf(file_path)
+
+        elif ext == ".docx":
+            raw_text = extract_docx(file_path)
+
+        elif ext == ".txt":
+            raw_text = extract_txt(file_path)
+
+        else:
+            raise ValueError("Unsupported file type. Use PDF, DOCX, or TXT.")
+
+    else:
+        raise ValueError("You must provide either a file_path or pasted_text.")
+
+    # Check if any text was extracted
+    if not raw_text or not raw_text.strip():
+        raise ValueError("No text could be extracted from the document.")
+
+    # Clean the text
+    cleaned_text = clean_text(raw_text)
+
+    return cleaned_text
