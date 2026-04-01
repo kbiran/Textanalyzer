@@ -15,11 +15,9 @@ Comments are included throughout the code.
 from typing import List, Union, Dict, Any
 import os
 import re
-import math
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 
 # --- Helper utilities ---
 
@@ -51,8 +49,8 @@ def _simple_highlight(passage: str, query: str) -> str:
     if not tokens:
         return passage
 
-    # escape tokens for regex
-    pattern = r"(" + r"|".join(re.escape(t) for t in set(tokens)) + r")"
+    # escape tokens for regex; use boundaries to avoid substring-only matches
+    pattern = r"\b(?:" + r"|".join(re.escape(t) for t in set(tokens)) + r")\b"
 
     def repl(m):
         # preserve original casing while adding highlight
@@ -84,23 +82,43 @@ def txtsearch_navigate(documents: Union[str, List[str], Dict[str, str]],
 
     Comments are included in the source to explain each step.
     """
+    if not isinstance(query, str) or not query.strip():
+        raise ValueError("query must be a non-empty string")
+    if not isinstance(sentences_per_passage, int) or sentences_per_passage <= 0:
+        raise ValueError("sentences_per_passage must be a positive integer")
+    if not isinstance(top_k, int) or top_k <= 0:
+        raise ValueError("top_k must be a positive integer")
+
     # Normalize documents into a list of (doc_id, text)
     doc_items = []
 
     if isinstance(documents, str):
         # treat as either a file path (if exists) or as a single document string
         if os.path.exists(documents):
-            with open(documents, "r", encoding="utf-8") as f:
-                text = f.read()
-            doc_items.append((os.path.basename(documents), text))
+            try:
+                with open(documents, "r", encoding="utf-8") as f:
+                    text = f.read()
+            except (OSError, UnicodeDecodeError) as exc:
+                raise ValueError(f"Failed to read file '{documents}': {exc}") from exc
+            if text.strip():
+                doc_items.append((os.path.basename(documents), text))
         else:
-            doc_items.append(("doc_0", documents))
+            if documents.strip():
+                doc_items.append(("doc_0", documents))
     elif isinstance(documents, dict):
         for k, v in documents.items():
-            doc_items.append((str(k), str(v)))
+            if v is None:
+                continue
+            text = str(v)
+            if text.strip():
+                doc_items.append((str(k), text))
     elif isinstance(documents, list):
         for i, v in enumerate(documents):
-            doc_items.append((f"doc_{i}", str(v)))
+            if v is None:
+                continue
+            text = str(v)
+            if text.strip():
+                doc_items.append((f"doc_{i}", text))
     else:
         raise ValueError("Unsupported documents type; provide str/list/dict")
 
@@ -114,12 +132,14 @@ def txtsearch_navigate(documents: Union[str, List[str], Dict[str, str]],
         return []
 
     # Load embedding model (user can change `model_name`)
-    model = SentenceTransformer(model_name)
+    try:
+        model = SentenceTransformer(model_name)
+    except Exception as exc:
+        raise ValueError(f"Failed to load model '{model_name}': {exc}") from exc
 
     # Create embeddings for passages (US3.1 Generate Embeddings)
     passage_texts = [p[1] for p in passages]
     passage_embeddings = model.encode(passage_texts, convert_to_numpy=True, show_progress_bar=False)
-
     # Normalize embeddings for cosine similarity speed
     eps = 1e-8
     norms = np.linalg.norm(passage_embeddings, axis=1, keepdims=True)
