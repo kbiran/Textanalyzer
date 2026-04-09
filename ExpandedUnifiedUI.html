@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Document Summarizer & Navigator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        header { background: #1e88e5; color: white; padding: 15px; font-size: 22px; }
+        nav { display: flex; background: #1565c0; }
+        nav button {
+            flex: 1;
+            padding: 12px;
+            background: #1565c0;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        nav button.active { background: #0d47a1; }
+        .container { padding: 20px; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .section-title { font-size: 20px; margin-top: 20px; }
+        .result-box {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .outline-item {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .outline-item:hover { background: #eee; }
+    </style>
+</head>
+
+<body>
+
+<header>Smart Document Summarizer & Navigator</header>
+
+<!-- MODE SWITCHING NAVIGATION -->
+<nav>
+    <button id="tab-summary" class="active" onclick="switchTab('summary')">Summary</button>
+    <button id="tab-search" onclick="switchTab('search')">Search</button>
+    <button id="tab-outline" onclick="switchTab('outline')">Outline</button>
+</nav>
+
+<div class="container">
+
+    <!-- SUMMARY PANEL -->
+    <div id="panel-summary" class="panel active">
+        <h2>Document Summary</h2>
+
+        <label>Summary Length:</label>
+        <select id="summary-length">
+            <option value="short">Short</option>
+            <option value="medium">Medium</option>
+            <option value="long">Long</option>
+        </select>
+
+        <button onclick="generateSummary()">Generate Summary</button>
+
+        <div class="section-title">Extractive Summary</div>
+        <div id="extractive-box" class="result-box"></div>
+
+        <div class="section-title">Abstractive Summary</div>
+        <div id="abstractive-box" class="result-box"></div>
+    </div>
+
+    <!-- SEARCH PANEL -->
+    <div id="panel-search" class="panel">
+        <h2>Semantic Search</h2>
+
+        <input id="search-query" type="text" placeholder="Ask a question about the document..." style="width: 80%; padding: 8px;">
+        <button onclick="runSearch()">Search</button>
+
+        <div class="section-title">Search Results</div>
+        <div id="search-results" class="result-box"></div>
+    </div>
+
+    <!-- OUTLINE PANEL -->
+    <div id="panel-outline" class="panel">
+        <h2>Document Outline</h2>
+
+        <button onclick="loadOutline()">Load Outline</button>
+
+        <div id="outline-container" class="result-box"></div>
+    </div>
+
+</div>
+
+<script>
+    // Switch between Summary / Search / Outline
+    function switchTab(tab) {
+        document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+
+        document.getElementById("tab-" + tab).classList.add("active");
+        document.getElementById("panel-" + tab).classList.add("active");
+    }
+
+    // Placeholder JS functions — you will connect these to your Python backend
+    function generateSummary() {
+        const length = document.getElementById("summary-length").value;
+        document.getElementById("extractive-box").innerHTML = "Loading extractive summary...";
+        document.getElementById("abstractive-box").innerHTML = "Loading abstractive summary...";
+    }
+
+    function runSearch() {
+        const q = document.getElementById("search-query").value;
+        document.getElementById("search-results").innerHTML = "Searching for: " + q;
+    }
+
+    function loadOutline() {
+        document.getElementById("outline-container").innerHTML = "Loading outline...";
+    }
+</script>
+
+</body>
+</html>
