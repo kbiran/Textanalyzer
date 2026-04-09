@@ -19,10 +19,11 @@ import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 from collections import defaultdict
 from transformers import pipeline
+from typing import Literal
 
 nltk.download('punkt', quiet=True)
 
-def text_extractor(text, mode="extractive", length="medium"):
+def text_extractor(text: str, mode: Literal["extractive", "abstractive"] = "extractive", length: Literal["short", "medium", "long"] = "medium") -> str:
     """
     Generate extractive or abstractive summaries with 3-level length control.
 
