@@ -4,3 +4,7 @@ The first function, "ReadnClean.py' takes the original input file and extract th
 The second Python function, corresponding to the second iteration, is 'txtExtract.py'function. This function takes the text, which was red and cleaned up by the funtion in iteration 1 and summarized it. The user interacts with this function and can view the toriinal text and it summary by using a second UI, 'UI4Textsummary.html', which is also  web-page oriented UI.
 The third Python function, 'txtSearch_navigate', is associated with the third iteration and provides capabilities to search for an item throughout the text and also to navigate in between the various components of the text.
 The fourth Phyton function,  'DocMap.py', supports the user stories embedded within the fourth iteration and builds a map of the document/text structure and allows the user to navigate in betweem those parts and sections of the document.
+In iteration 5, the first user story requires to create an expanded unified UI to include additional funcions for search the document and get outlines in addition to displaying the summaries. This is supported by the file 'ExpandedUnifiedUI.html'.
+The second user story in iteration 5 is the document Q&A module.
+this i next step fits well into the rest of the Smart Document Summarizer & Navigator.
+As I already have Summary Mode, Search Mode, and Outline Mode. Q&A Mode fits perfectly as a fourth module and is very natural for use.

@@ -1,12 +1,32 @@
 <!DOCTYPE html>
+<!-- This HTML document creates a web interface for a Smart Document Summarizer & Navigator tool -->
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <!-- Title of the web page displayed in the browser tab -->
     <title>Smart Document Summarizer & Navigator</title>
+    <!-- Embedded CSS styles for the page layout and appearance -->
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
-        header { background: #1e88e5; color: white; padding: 15px; font-size: 22px; }
-        nav { display: flex; background: #1565c0; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+        
+        header {
+            background: #1e88e5;
+            color: white;
+            padding: 15px;
+            font-size: 22px;
+        }
+        
+        nav {
+            display: flex;
+            background: #1565c0;
+        }
+        
         nav button {
             flex: 1;
             padding: 12px;
@@ -16,108 +36,226 @@
             cursor: pointer;
             font-size: 16px;
         }
-        nav button.active { background: #0d47a1; }
-        .container { padding: 20px; }
-        .panel { display: none; }
-        .panel.active { display: block; }
-        .section-title { font-size: 20px; margin-top: 20px; }
+        
+        nav button.active {
+            background: #0d47a1;
+        }
+        
+        .container {
+            padding: 20px;
+        }
+        
+        .panel {
+            display: none;
+        }
+        
+        .panel.active {
+            display: block;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+        
         .result-box {
             background: white;
             padding: 15px;
             border-radius: 6px;
             margin-top: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+        
         .outline-item {
             padding: 8px;
             border-bottom: 1px solid #ddd;
             cursor: pointer;
         }
-        .outline-item:hover { background: #eee; }
+        
+        .outline-item:hover {
+            background: #eee;
+        }
     </style>
 </head>
 
+<!-- Main body of the HTML document -->
+
 <body>
 
-<header>Smart Document Summarizer & Navigator</header>
+    <!-- Header section with the application title -->
+    <header>Smart Document Summarizer & Navigator</header>
 
-<!-- MODE SWITCHING NAVIGATION -->
-<nav>
-    <button id="tab-summary" class="active" onclick="switchTab('summary')">Summary</button>
-    <button id="tab-search" onclick="switchTab('search')">Search</button>
-    <button id="tab-outline" onclick="switchTab('outline')">Outline</button>
-</nav>
+    <!-- Navigation bar for switching between different modes/tabs -->
+    <!-- MODE SWITCHING NAVIGATION -->
+    <nav>
+        <button id="tab-summary" class="active" onclick="switchTab('summary')">Summary</button>
+        <button id="tab-search" onclick="switchTab('search')">Search</button>
+        <button id="tab-qa" onclick="switchTab('qa')">Q&A</button>
+        <button id="tab-outline" onclick="switchTab('outline')">Outline</button>
+    </nav>
 
-<div class="container">
+    <!-- Main content container holding all the panels -->
+    <main class="container">
 
-    <!-- SUMMARY PANEL -->
-    <div id="panel-summary" class="panel active">
-        <h2>Document Summary</h2>
+        <!-- Panel for generating document summaries -->
+        <!-- SUMMARY PANEL -->
+        <div id="panel-summary" class="panel active">
+            <h2>Document Summary</h2>
 
-        <label>Summary Length:</label>
-        <select id="summary-length">
-            <option value="short">Short</option>
-            <option value="medium">Medium</option>
-            <option value="long">Long</option>
-        </select>
+            <label for="summary-length">Summary Length:</label>
+            <select id="summary-length" aria-label="Select summary length">
+                <option value="short">Short</option>
+                <option value="medium">Medium</option>
+                <option value="long">Long</option>
+            </select>
 
-        <button onclick="generateSummary()">Generate Summary</button>
+            <button onclick="generateSummary()">Generate Summary</button>
 
-        <div class="section-title">Extractive Summary</div>
-        <div id="extractive-box" class="result-box"></div>
+            <div class="section-title">Extractive Summary</div>
+            <div id="extractive-box" class="result-box"></div>
 
-        <div class="section-title">Abstractive Summary</div>
-        <div id="abstractive-box" class="result-box"></div>
-    </div>
+            <div class="section-title">Abstractive Summary</div>
+            <div id="abstractive-box" class="result-box"></div>
+        </div>
 
-    <!-- SEARCH PANEL -->
-    <div id="panel-search" class="panel">
-        <h2>Semantic Search</h2>
+        <!-- Panel for performing semantic search on the document -->
+        <!-- SEARCH PANEL -->
+        <div id="panel-search" class="panel">
+            <h2>Semantic Search</h2>
 
-        <input id="search-query" type="text" placeholder="Ask a question about the document..." style="width: 80%; padding: 8px;">
-        <button onclick="runSearch()">Search</button>
+            <input id="search-query" type="text" placeholder="Ask a question about the document..." style="width: 80%; padding: 8px;" aria-label="Search query input">
+            <button onclick="runSearch()">Search</button>
 
-        <div class="section-title">Search Results</div>
-        <div id="search-results" class="result-box"></div>
-    </div>
+            <div class="section-title">Search Results</div>
+            <div id="search-results" class="result-box"></div>
+        </div>
 
-    <!-- OUTLINE PANEL -->
-    <div id="panel-outline" class="panel">
-        <h2>Document Outline</h2>
+        <!-- Panel for displaying the document outline/structure -->
+        <!-- OUTLINE PANEL -->
+        <div id="panel-outline" class="panel">
+            <h2>Document Outline</h2>
 
-        <button onclick="loadOutline()">Load Outline</button>
+            <button onclick="loadOutline()">Load Outline</button>
 
-        <div id="outline-container" class="result-box"></div>
-    </div>
+            <div id="outline-container" class="result-box"></div>
+        </div>
 
-</div>
+        <!-- Panel for question-answering using the Q&A backend -->
+        <!-- Q&A PANEL -->
+        <div id="panel-qa" class="panel">
+            <h2>Question & Answer</h2>
 
-<script>
-    // Switch between Summary / Search / Outline
-    function switchTab(tab) {
-        document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("active"));
-        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+            <label for="qa-question">Question:</label>
+            <input id="qa-question" type="text" placeholder="Ask a question about the document..." style="width: 100%; padding: 8px; margin-bottom: 10px;" aria-label="Q&A question input">
 
-        document.getElementById("tab-" + tab).classList.add("active");
-        document.getElementById("panel-" + tab).classList.add("active");
-    }
+            <label for="qa-context">Context:</label>
+            <textarea id="qa-context" rows="6" placeholder="Paste document text or context here..." style="width: 100%; padding: 8px; margin-bottom: 10px;" aria-label="Q&A context input"></textarea>
 
-    // Placeholder JS functions — you will connect these to your Python backend
-    function generateSummary() {
-        const length = document.getElementById("summary-length").value;
-        document.getElementById("extractive-box").innerHTML = "Loading extractive summary...";
-        document.getElementById("abstractive-box").innerHTML = "Loading abstractive summary...";
-    }
+            <button onclick="runQA()">Submit Question</button>
 
-    function runSearch() {
-        const q = document.getElementById("search-query").value;
-        document.getElementById("search-results").innerHTML = "Searching for: " + q;
-    }
+            <div class="section-title">Answer</div>
+            <div id="qa-result" class="result-box"></div>
+        </div>
 
-    function loadOutline() {
-        document.getElementById("outline-container").innerHTML = "Loading outline...";
-    }
-</script>
+    </main>
+
+    <!-- JavaScript code for interactive functionality -->
+    <script>
+        // Function to switch between different tabs/panels
+        function switchTab(tab) {
+            document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("active"));
+            document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+
+            document.getElementById("tab-" + tab).classList.add("active");
+            document.getElementById("panel-" + tab).classList.add("active");
+        }
+
+        // Placeholder function for generating document summaries (to be connected to backend)
+        // For testing: provides mock summary data
+        function generateSummary() {
+            const length = document.getElementById("summary-length").value;
+            // Mock extractive summary
+            document.getElementById("extractive-box").innerHTML = `<p>This is a mock ${length} extractive summary. It extracts key sentences directly from the document to provide a concise overview.</p>`;
+            // Mock abstractive summary
+            document.getElementById("abstractive-box").innerHTML = `<p>This is a mock ${length} abstractive summary. It rephrases and condenses the document's main ideas into new wording for better readability.</p>`;
+        }
+
+        // Placeholder function for running semantic search (to be connected to backend)
+        // For testing: provides mock search results
+        function runSearch() {
+            const q = document.getElementById("search-query").value;
+            if (q.trim() === "") {
+                document.getElementById("search-results").innerHTML = "<p>Please enter a search query.</p>";
+            } else {
+                document.getElementById("search-results").innerHTML = `
+                    <p>Mock search results for: "<strong>${q}</strong>"</p>
+                    <ul>
+                        <li><strong>Result 1:</strong> This section discusses topics related to your query.</li>
+                        <li><strong>Result 2:</strong> Another relevant passage from the document.</li>
+                        <li><strong>Result 3:</strong> Additional context found in the text.</li>
+                    </ul>
+                `;
+            }
+        }
+
+        // Placeholder function for loading document outline (to be connected to backend)
+        // For testing: provides mock outline structure
+        function loadOutline() {
+            document.getElementById("outline-container").innerHTML = `
+                <div class="outline-item" onclick="alert('Navigate to Introduction')">1. Introduction</div>
+                <div class="outline-item" onclick="alert('Navigate to Main Content')">2. Main Content
+                    <div style="margin-left: 20px;">
+                        <div class="outline-item" onclick="alert('Navigate to Subsection 2.1')">2.1 Subsection</div>
+                        <div class="outline-item" onclick="alert('Navigate to Subsection 2.2')">2.2 Another Subsection</div>
+                    </div>
+                </div>
+                <div class="outline-item" onclick="alert('Navigate to Conclusion')">3. Conclusion</div>
+            `;
+        }
+
+        // Call the Python Q&A module backend endpoint at /qa.
+        // Expects JSON with {question, context} and returns an answer with confidence score.
+        async function runQA() {
+            const question = document.getElementById("qa-question").value;
+            const context = document.getElementById("qa-context").value;
+            const resultBox = document.getElementById("qa-result");
+
+            if (question.trim() === "" || context.trim() === "") {
+                resultBox.innerHTML = "<p>Please provide both a question and context.</p>";
+                return;
+            }
+
+            resultBox.innerHTML = "<p>Loading answer...</p>";
+
+            try {
+                const response = await fetch("/qa", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        question,
+                        context
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || "Unable to fetch answer.");
+                }
+
+                const data = await response.json();
+                resultBox.innerHTML = `
+                    <p><strong>Answer:</strong> ${data.answer}</p>
+                    <p><strong>Confidence:</strong> ${Math.round(data.score * 100)}%</p>
+                `;
+            } catch (err) {
+                resultBox.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+            }
+        }
+    </script>
 
 </body>
+<!-- End of HTML document -->
+
 </html>
