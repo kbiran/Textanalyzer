@@ -8,3 +8,4 @@ In iteration 5, the first user story requires to create an expanded unified UI t
 The second user story in iteration 5 is the document Q&A module.
 this i next step fits well into the rest of the Smart Document Summarizer & Navigator.
 As I already have Summary Mode, Search Mode, and Outline Mode. Q&A Mode fits perfectly as a fourth module and is very natural for use.
+IN addition to adding a function of Q&A-Module for the Python back office of ghe project, the previously expanded UI has been expanded again to support a Q&A function for the user to type a question and receive an answer. This HTML file.  when  opened in VS, it shows the HTML code, but when opened from the 'file explorer' it shows the a web page design of this general UI for this entire project.
